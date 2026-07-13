@@ -10,5 +10,9 @@ The objective of this research is to automate the extraction and mapping of oper
 ## Repository Structure
 ```plaintext
 ├── incident_type_r_reporting_regulated_gas_gathering_may2022_present.txt  <- Raw PHMSA Dataset
+├── incident_type_r_reporting_regulated_gas_gathering_may2022_present.csv  <- Standard CSV Data Matrix
 ├── convert_text_to_csv.py                                                 <- Data Extraction & Format Script
-├── README.md                                                              <- Repository Documentation
+├── clean_data.py                                                          <- Structural Filtering & Preprocessing
+├── engineer_labels.py                                                     <- Dual-Axis Target Label Generation
+├── baseline_model.py                                                      <- Traditional TF-IDF & Random Forest ML
+└── README.md                                                              <- Repository Documentation Landing Page
