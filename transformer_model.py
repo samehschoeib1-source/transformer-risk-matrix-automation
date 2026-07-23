@@ -71,7 +71,6 @@ def get_aligned_class_weights(y_train, num_total_classes):
     unique_classes = np.unique(y_train)
     weights = compute_class_weight('balanced', classes=unique_classes, y=y_train)
     
-    # Initialize full weight tensor with 1.0
     full_weights = np.ones(num_total_classes, dtype=np.float32)
     for c, w in zip(unique_classes, weights):
         if c < num_total_classes:
@@ -80,7 +79,7 @@ def get_aligned_class_weights(y_train, num_total_classes):
     return full_weights
 
 # --- 3. Training & Evaluation Pipeline ---
-def train_multi_task_model(model_name='distilbert-base-uncased', epochs=3, batch_size=16, lr=2e-5):
+def train_multi_task_model(model_name='distilbert-base-uncased', epochs=5, batch_size=16, lr=3e-5):
     input_file = 'engineered_risk_data.csv'
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f"Using execution device: {device}")
@@ -93,7 +92,6 @@ def train_multi_task_model(model_name='distilbert-base-uncased', epochs=3, batch
         y_impact = df['IMPACT_SEVERITY']
         y_likelihood = df['ESCALATION_LIKELIHOOD']
 
-        # Train/Test Split (80/20) matching academic standard
         X_train, X_test, y_imp_tr, y_imp_te, y_lik_tr, y_lik_te = train_test_split(
             X, y_impact, y_likelihood, test_size=0.20, random_state=42
         )
@@ -106,7 +104,6 @@ def train_multi_task_model(model_name='distilbert-base-uncased', epochs=3, batch
         train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
         test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
-        # FIXED: Robust class weight calculation preventing ValueError
         imp_weights = get_aligned_class_weights(y_imp_tr, num_total_classes=4)
         lik_weights = get_aligned_class_weights(y_lik_tr, num_total_classes=3)
         
@@ -135,7 +132,6 @@ def train_multi_task_model(model_name='distilbert-base-uncased', epochs=3, batch
                 loss_imp = criterion_impact(logits_impact, labels_impact)
                 loss_lik = criterion_likelihood(logits_likelihood, labels_likelihood)
                 
-                # Joint Loss Optimization
                 total_loss = loss_imp + loss_lik
                 
                 total_loss.backward()
@@ -179,4 +175,5 @@ def train_multi_task_model(model_name='distilbert-base-uncased', epochs=3, batch
         print(f"Error: Required file '{input_file}' not found. Ensure engineer_labels.py has been run.")
 
 if __name__ == "__main__":
-    train_multi_task_model(model_name='distilbert-base-uncased', epochs=3)
+    # Updated: 5 Epochs & 3e-5 Learning Rate for better convergence
+    train_multi_task_model(model_name='distilbert-base-uncased', epochs=5, lr=3e-5)
