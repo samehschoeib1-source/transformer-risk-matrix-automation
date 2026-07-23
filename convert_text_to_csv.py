@@ -1,3 +1,4 @@
+%%writefile convert_text_to_csv.py
 import pandas as pd
 import glob
 import os
@@ -13,13 +14,9 @@ def inspect_and_merge_phmsa():
     
     processed_dfs = []
     
-    # Core target mapping dictionary
-    # Standard Names: 'NARRATIVE', 'TOTAL_COST', 'FATALITIES', 'INJURIES'
-    
     for file in sorted(txt_files):
-        print(f"\n File: {file}")
+        print(f"\nFile: {file}")
         try:
-            # Load raw file
             df_temp = pd.read_csv(file, sep='\t', encoding='latin1', low_memory=False)
             df_temp.columns = df_temp.columns.str.strip().str.replace('"', '').str.replace("'", "")
             
@@ -33,9 +30,9 @@ def inspect_and_merge_phmsa():
                     narr_col = col
                     break
             
-            # --- Detect Cost Column ---
+            # --- Detect Cost Column across All PHMSA Schemas ---
             cost_col = None
-            for col in ['TOTAL_COST_CURRENT', 'EST_COST_OPER_PAID', 'TOTAL_COST', 'ESTIMATED_COST']:
+            for col in ['EST_COST_OPER_PAID', 'TOTAL_COST_CURRENT', 'TOTAL_COST', 'ESTIMATED_COST', 'COST_PROPERTY', 'TOTAL_PROPERTY_DAMAGE']:
                 if col in df_temp.columns:
                     cost_col = col
                     break
@@ -44,26 +41,24 @@ def inspect_and_merge_phmsa():
             print(f"   • Detected Primary Cost Column: '{cost_col}'")
             
             if narr_col:
-                # Filter valid narrative rows
-                valid_narrs = df_temp.dropna(subset=[narr_col])
+                valid_narrs = df_temp.dropna(subset=[narr_col]).copy()
                 sample_snippet = str(valid_narrs[narr_col].iloc[0])[:120].replace('\n', ' ')
                 print(f"   • Valid Narratives Count: {len(valid_narrs)}")
                 print(f"   • Sample Text: \"{sample_snippet}...\"")
                 
-                # Standardize columns for this dataframe
+                # Standardize primary columns
                 df_standard = df_temp.copy()
                 df_standard = df_standard.rename(columns={
                     narr_col: 'NARRATIVE',
                 })
+                
                 if cost_col:
                     df_standard = df_standard.rename(columns={cost_col: 'EST_COST_OPER_PAID'})
                 
-                # Tag original source for tracking
                 df_standard['SOURCE_FILE'] = file
-                
                 processed_dfs.append(df_standard)
             else:
-                print("    WARNING: Could not identify a narrative column in this file. Skipping.")
+                print("WARNING: Could not identify a narrative column in this file. Skipping.")
                 
         except Exception as e:
             print(f"Error reading file: {e}")
@@ -74,14 +69,12 @@ def inspect_and_merge_phmsa():
         print("Error: No valid dataframes to merge.")
         return
 
-    # Merge verified dataframes
     merged_df = pd.concat(processed_dfs, axis=0, ignore_index=True)
     
-    # Save output matching downstream scripts
     output_filename = 'incident_type_r_reporting_regulated_gas_gathering_may2022_present.csv'
     merged_df.to_csv(output_filename, index=False, encoding='utf-8')
     
-    print(f"\n SUCCESS!")
+    print(f"\nSUCCESS!")
     print(f"Merged {len(processed_dfs)} datasets into: '{output_filename}'")
     print(f"Final Matrix Shape: {merged_df.shape[0]} total incidents across {merged_df.shape[1]} attributes.")
     print("==================================================================")
