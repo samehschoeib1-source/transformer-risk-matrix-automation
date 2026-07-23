@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -6,66 +7,74 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, accuracy_score
 from imblearn.over_sampling import RandomOverSampler
 
-def run_baseline():
-    input_file = 'engineered_risk_data.csv'
+def run_baseline_pipeline(input_file='engineered_risk_data.csv'):
+    print("--- Step 5: Training ML Baseline Model (Balanced Training Split) ---")
     print(f"Loading engineered risk dataset: {input_file}...")
+    
+    # Load dataset with low_memory=False to suppress mixed type warnings
+    df = pd.read_csv(input_file, encoding='utf-8', low_memory=False).dropna(subset=['NARRATIVE'])
+    
+    X = df['NARRATIVE'].values
+    y_impact = df['IMPACT_SEVERITY'].values
+    y_escalation = df['ESCALATION_LIKELIHOOD'].values
 
-    try:
-        df = pd.read_csv(input_file, encoding='utf-8').dropna(subset=['NARRATIVE'])
-        
-        X = df['NARRATIVE']
-        y_impact = df['IMPACT_SEVERITY']
-        y_likelihood = df['ESCALATION_LIKELIHOOD']
+    # Stratified 80/20 Split on Impact Severity
+    X_train, X_test, y_train_imp, y_test_imp, y_train_esc, y_test_esc = train_test_split(
+        X, y_impact, y_escalation, test_size=0.2, random_state=42, stratify=y_impact
+    )
 
-        # 1. Standard Train/Test Split (80/20) with random_state=42
-        X_train, X_test, y_imp_tr, y_imp_te, y_lik_tr, y_lik_te = train_test_split(
-            X, y_impact, y_likelihood, test_size=0.20, random_state=42
-        )
+    print(f"Original Training observations: {len(X_train)} | Test observations: {len(X_test)}")
 
-        print(f"Original Training observations: {len(X_train)} | Test observations: {len(X_test)}")
+    # Vectorize Text Data via TF-IDF
+    tfidf = TfidfVectorizer(max_features=5000, stop_words='english', ngram_range=(1, 2))
+    X_train_tfidf = tfidf.fit_transform(X_train)
+    X_test_tfidf = tfidf.transform(X_test)
 
-        # 2. Oversample Training Set Only (Apples-to-Apples Balancing)
-        ros_imp = RandomOverSampler(random_state=42)
-        X_train_imp_res, y_imp_tr_res = ros_imp.fit_resample(X_train.to_frame(), y_imp_tr)
-        
-        ros_lik = RandomOverSampler(random_state=42)
-        X_train_lik_res, y_lik_tr_res = ros_lik.fit_resample(X_train.to_frame(), y_lik_tr)
+    # Balance Training Set via Oversampling
+    ros_imp = RandomOverSampler(random_state=42)
+    X_train_imp_res, y_train_imp_res = ros_imp.fit_resample(X_train_tfidf, y_train_imp)
 
-        print(f"Balanced Training observations (Impact): {len(X_train_imp_res)}")
-        print(f"Balanced Training observations (Likelihood): {len(X_train_lik_res)}")
+    ros_esc = RandomOverSampler(random_state=42)
+    X_train_esc_res, y_train_esc_res = ros_esc.fit_resample(X_train_tfidf, y_train_esc)
 
-        # 3. TF-IDF Vectorization
-        tfidf_imp = TfidfVectorizer(max_features=1000, stop_words='english')
-        X_tr_imp_vec = tfidf_imp.fit_transform(X_train_imp_res['NARRATIVE'])
-        X_te_imp_vec = tfidf_imp.transform(X_test)
+    print(f"Balanced Training observations (Impact): {X_train_imp_res.shape[0]}")
+    print(f"Balanced Training observations (Likelihood): {X_train_esc_res.shape[0]}")
 
-        tfidf_lik = TfidfVectorizer(max_features=1000, stop_words='english')
-        X_tr_lik_vec = tfidf_lik.fit_transform(X_train_lik_res['NARRATIVE'])
-        X_te_lik_vec = tfidf_lik.transform(X_test)
+    # --- 1. Train & Predict Impact Severity ---
+    rf_impact = RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=-1)
+    rf_impact.fit(X_train_imp_res, y_train_imp_res)
+    y_pred_imp = rf_impact.predict(X_test_tfidf)
 
-        # 4. Train Random Forest Baseline
-        rf_impact = RandomForestClassifier(n_estimators=100, random_state=42)
-        rf_impact.fit(X_tr_imp_vec, y_imp_tr_res)
-        imp_preds = rf_impact.predict(X_te_imp_vec)
+    # --- 2. Train & Predict Escalation Likelihood ---
+    rf_escalation = RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=-1)
+    rf_escalation.fit(X_train_esc_res, y_train_esc_res)
+    y_pred_esc = rf_escalation.predict(X_test_tfidf)
 
-        rf_lik = RandomForestClassifier(n_estimators=100, random_state=42)
-        rf_lik.fit(X_tr_lik_vec, y_lik_tr_res)
-        lik_preds = rf_lik.predict(X_te_lik_vec)
+    # --- Print Evaluation Report ---
+    imp_acc = accuracy_score(y_test_imp, y_pred_imp)
+    esc_acc = accuracy_score(y_test_esc, y_pred_esc)
 
-        # 5. Report Results
-        print("\n================ BASELINE (BALANCED) EVALUATION REPORT ================")
-        print(f"Impact Severity Target Accuracy: {accuracy_score(y_imp_te, imp_preds):.4f}")
-        print("\nImpact Classification Metrics:")
-        print(classification_report(y_imp_te, imp_preds, zero_division=0))
+    print("\n================ BASELINE (BALANCED) EVALUATION REPORT ================")
+    print(f"Impact Severity Target Accuracy: {imp_acc:.4f}\n")
+    print("Impact Classification Metrics:")
+    print(classification_report(y_test_imp, y_pred_imp))
+    
+    print("-" * 60)
+    print(f"Escalation Likelihood Target Accuracy: {esc_acc:.4f}\n")
+    print("Likelihood Classification Metrics:")
+    print(classification_report(y_test_esc, y_pred_esc))
+    print("=======================================================================")
 
-        print("-" * 60)
-        print(f"Escalation Likelihood Target Accuracy: {accuracy_score(y_lik_te, lik_preds):.4f}")
-        print("\nLikelihood Classification Metrics:")
-        print(classification_report(y_lik_te, lik_preds, zero_division=0))
-        print("=======================================================================")
-
-    except FileNotFoundError:
-        print(f"Error: '{input_file}' not found.")
+    # --- Export Results for Step 7 (evaluate_comparison.py) ---
+    os.makedirs('results', exist_ok=True)
+    np.savez_compressed(
+        'results/baseline_preds.npz',
+        y_true_impact=y_test_imp,
+        y_pred_impact=y_pred_imp,
+        y_true_escalation=y_test_esc,
+        y_pred_escalation=y_pred_esc
+    )
+    print("\n[SUCCESS] Baseline test predictions exported to 'results/baseline_preds.npz'")
 
 if __name__ == "__main__":
-    run_baseline()
+    run_baseline_pipeline()
