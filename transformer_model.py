@@ -1,3 +1,4 @@
+import os
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
@@ -62,7 +63,8 @@ def train_multi_task_model(model_name='distilbert-base-uncased', epochs=5, batch
     print(f"Using device: {device} | Encoder: {model_name}")
 
     try:
-        df = pd.read_csv(input_file, encoding='utf-8').dropna(subset=['NARRATIVE'])
+        # Load dataset with low_memory=False to handle mixed types cleanly
+        df = pd.read_csv(input_file, encoding='utf-8', low_memory=False).dropna(subset=['NARRATIVE'])
         
         X = df['NARRATIVE']
         y_impact = df['IMPACT_SEVERITY']
@@ -150,6 +152,17 @@ def train_multi_task_model(model_name='distilbert-base-uncased', epochs=5, batch
         print("\nEscalation Likelihood Classification Metrics:")
         print(classification_report(lik_true, lik_preds, zero_division=0))
         print("==========================================================================")
+
+        # --- Export Results for evaluate_comparison.py ---
+        os.makedirs('results', exist_ok=True)
+        np.savez_compressed(
+            'results/transformer_preds.npz',
+            y_true_impact=np.array(imp_true),
+            y_pred_impact=np.array(imp_preds),
+            y_true_escalation=np.array(lik_true),
+            y_pred_escalation=np.array(lik_preds)
+        )
+        print("\n[SUCCESS] Transformer test predictions exported to 'results/transformer_preds.npz'")
 
     except FileNotFoundError:
         print(f"Error: Required file '{input_file}' not found.")
