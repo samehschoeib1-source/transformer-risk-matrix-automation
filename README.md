@@ -9,12 +9,15 @@ The objective of this research is to automate the extraction and mapping of oper
 
 ## Repository Structure
 ```plaintext
-├── incident_type_r_reporting_regulated_gas_gathering_may2022_present.txt  <- Raw PHMSA Dataset
-├── incident_type_r_reporting_regulated_gas_gathering_may2022_present.csv  <- Standard CSV Data Matrix
-├── convert_text_to_csv.py                                                 <- Data Extraction & Format Script
-├── clean_data.py                                                          <- Structural Filtering & Preprocessing
-├── eda.py                                                                 <- Inspect Distributions & Text Parameters
-├── engineer_labels.py                                                     <- Dual-Axis Target Label Generation
-├── baseline_model.py                                                      <- Traditional TF-IDF & Random Forest ML
-├── transformer_model.py                                                   <- Multi-Task BERT / DistilBERT Neural Network
+├── accident_hazardous_liquid_jan2010_present.txt                          <- Raw PHMSA Dataset (Liquid Pipelines & Gathering)
+├── incident_gas_transmission_gathering_2002_dec2009.txt                   <- Raw PHMSA Dataset (Historical Transmission & Gathering)
+├── incident_gas_transmission_gathering_jan2010_present.txt                <- Raw PHMSA Dataset (Gas Transmission & Gathering)
+├── incident_type_r_reporting_regulated_gas_gathering_may2022_present.txt  <- Raw PHMSA Dataset (Type R Gathering)
+├── incident_type_r_reporting_regulated_gas_gathering_may2022_present.csv  <- Unified Standardized CSV Matrix (9,117 Rows)
+├── convert_text_to_csv.py                                                 <- Batch Data Extraction, Schema Alignment & Merge Script
+├── clean_data.py                                                          <- Structural Filtering, Text Normalization & Preprocessing
+├── engineer_labels.py                                                     <- Dual-Axis Risk Target Label Engineering (Impact & Likelihood)
+├── eda.py                                                                 <- Distribution Inspection, Statistical Audits & Dashboard
+├── baseline_model.py                                                      <- TF-IDF & Oversampled Random Forest Baseline ML Model
+├── transformer_model.py                                                   <- Multi-Task DistilBERT / BERT Fine-Tuning Neural Network
 └── README.md                                                              <- Repository Documentation Landing Page
