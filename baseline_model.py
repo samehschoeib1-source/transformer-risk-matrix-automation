@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.ensemble import RandomForestClassifier
@@ -18,10 +19,16 @@ def train_baseline():
         y_impact = df['IMPACT_SEVERITY']
         y_likelihood = df['ESCALATION_LIKELIHOOD']
         
+        # Combined target composite to allow stratified splitting across both targets simultaneously
+        y_composite = df['IMPACT_SEVERITY'].astype(str) + "_" + df['ESCALATION_LIKELIHOOD'].astype(str)
+        
         # --- 1. Split Data into Train and Test Sets (80/20 split) ---
-        # Using a fixed random_state to ensure complete academic reproducibility
+        # Stratification guarantees balanced class distribution in both splits
         X_train, X_test, y_imp_train, y_imp_test, y_lik_train, y_lik_test = train_test_split(
-            X, y_impact, y_likelihood, test_size=0.20, random_state=42
+            X, y_impact, y_likelihood, 
+            test_size=0.20, 
+            random_state=42,
+            stratify=y_composite
         )
         
         print(f"Training observations: {len(X_train)} | Test observations: {len(X_test)}")
@@ -34,13 +41,13 @@ def train_baseline():
         
         # --- 3. Train Classifier 1: Impact Severity ---
         print("Training Random Forest Classifier for Impact Severity (Y-Axis)...")
-        rf_impact = RandomForestClassifier(n_estimators=100, random_state=42)
+        rf_impact = RandomForestClassifier(n_estimators=100, class_weight='balanced', random_state=42)
         rf_impact.fit(X_train_tfidf, y_imp_train)
         preds_impact = rf_impact.predict(X_test_tfidf)
         
         # --- 4. Train Classifier 2: Escalation Likelihood ---
         print("Training Random Forest Classifier for Escalation Likelihood (X-Axis)...")
-        rf_likelihood = RandomForestClassifier(n_estimators=100, random_state=42)
+        rf_likelihood = RandomForestClassifier(n_estimators=100, class_weight='balanced', random_state=42)
         rf_likelihood.fit(X_train_tfidf, y_lik_train)
         preds_likelihood = rf_likelihood.predict(X_test_tfidf)
         
@@ -48,12 +55,13 @@ def train_baseline():
         print("\n================ BASELINE EVALUATION REPORT ================")
         print(f"Impact Severity Target Accuracy: {accuracy_score(y_imp_test, preds_impact):.4f}")
         print("\nImpact Classification Metrics:")
-        print(classification_report(y_imp_test, preds_impact))
+        # zero_division=0 gracefully handles zero precision without throwing warnings
+        print(classification_report(y_imp_test, preds_impact, zero_division=0))
         
         print("-" * 60)
         print(f"Escalation Likelihood Target Accuracy: {accuracy_score(y_lik_test, preds_likelihood):.4f}")
         print("\nLikelihood Classification Metrics:")
-        print(classification_report(y_lik_test, preds_likelihood))
+        print(classification_report(y_lik_test, preds_likelihood, zero_division=0))
         print("============================================================")
         
     except FileNotFoundError:
