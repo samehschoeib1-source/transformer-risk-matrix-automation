@@ -13,6 +13,7 @@ The objective of this research is to automate the extraction and mapping of oper
 ├── incident_type_r_reporting_regulated_gas_gathering_may2022_present.csv  <- Standard CSV Data Matrix
 ├── convert_text_to_csv.py                                                 <- Data Extraction & Format Script
 ├── clean_data.py                                                          <- Structural Filtering & Preprocessing
+├── eda.py                                                                 <- Inspect Distributions & Text Parameters
 ├── engineer_labels.py                                                     <- Dual-Axis Target Label Generation
 ├── baseline_model.py                                                      <- Traditional TF-IDF & Random Forest ML
 ├── transformer_model.py                                                   <- Multi-Task BERT / DistilBERT Neural Network
