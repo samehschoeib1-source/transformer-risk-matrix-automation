@@ -1,3 +1,4 @@
+%%writefile transformer_model.py
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
@@ -66,6 +67,19 @@ class MultiTaskTransformer(nn.Module):
         
         return impact_logits, likelihood_logits
 
+# Helper function to compute aligned class weights safely
+def get_aligned_class_weights(y_train, num_total_classes):
+    unique_classes = np.unique(y_train)
+    weights = compute_class_weight('balanced', classes=unique_classes, y=y_train)
+    
+    # Initialize full weight tensor with 1.0
+    full_weights = np.ones(num_total_classes, dtype=np.float32)
+    for c, w in zip(unique_classes, weights):
+        if c < num_total_classes:
+            full_weights[int(c)] = w
+            
+    return full_weights
+
 # --- 3. Training & Evaluation Pipeline ---
 def train_multi_task_model(model_name='distilbert-base-uncased', epochs=3, batch_size=16, lr=2e-5):
     input_file = 'engineered_risk_data.csv'
@@ -93,18 +107,14 @@ def train_multi_task_model(model_name='distilbert-base-uncased', epochs=3, batch
         train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
         test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
-        # FIXED: Pass explicit full class ranges np.arange() so weight dimensions match head output dimensions
-        imp_classes = np.array([0, 1, 2, 3])
-        lik_classes = np.array([0, 1, 2])
-        
-        imp_weights = compute_class_weight('balanced', classes=imp_classes, y=y_imp_tr)
-        lik_weights = compute_class_weight('balanced', classes=lik_classes, y=y_lik_tr)
+        # FIXED: Robust class weight calculation preventing ValueError
+        imp_weights = get_aligned_class_weights(y_imp_tr, num_total_classes=4)
+        lik_weights = get_aligned_class_weights(y_lik_tr, num_total_classes=3)
         
         criterion_impact = nn.CrossEntropyLoss(weight=torch.tensor(imp_weights, dtype=torch.float).to(device))
         criterion_likelihood = nn.CrossEntropyLoss(weight=torch.tensor(lik_weights, dtype=torch.float).to(device))
 
         model = MultiTaskTransformer(model_name=model_name).to(device)
-        # FIXED: PyTorch native AdamW optimizer
         optimizer = AdamW(model.parameters(), lr=lr, weight_decay=0.01)
 
         # --- Training Loop ---
@@ -158,7 +168,6 @@ def train_multi_task_model(model_name='distilbert-base-uncased', epochs=3, batch
 
         print(f"Impact Severity Accuracy: {accuracy_score(imp_true, imp_preds):.4f}")
         print("\nImpact Severity Classification Metrics:")
-        # FIXED: Pass zero_division=0 to handle unpredicted classes cleanly
         print(classification_report(imp_true, imp_preds, zero_division=0))
         
         print("-" * 60)
