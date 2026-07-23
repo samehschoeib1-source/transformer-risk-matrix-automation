@@ -9,16 +9,22 @@ The objective of this research is to automate the extraction and mapping of oper
 
 ## Repository Structure
 ```plaintext
-├── accident_hazardous_liquid_jan2010_present.txt                          <- Raw PHMSA Dataset (Liquid Pipelines & Gathering)
-├── incident_gas_transmission_gathering_2002_dec2009.txt                   <- Raw PHMSA Dataset (Historical Transmission & Gathering)
-├── incident_gas_transmission_gathering_jan2010_present.txt                <- Raw PHMSA Dataset (Gas Transmission & Gathering)
+├── accident_hazardous_liquid_jan2010_present.txt            <- Raw PHMSA Dataset (Liquid Pipelines & Gathering)
+├── incident_gas_transmission_gathering_2002_dec2009.txt     <- Raw PHMSA Dataset (Historical Transmission & Gathering)
+├── incident_gas_transmission_gathering_jan2010_present.txt  <- Raw PHMSA Dataset (Gas Transmission & Gathering)
 ├── incident_type_r_reporting_regulated_gas_gathering_may2022_present.txt  <- Raw PHMSA Dataset (Type R Gathering)
 ├── incident_type_r_reporting_regulated_gas_gathering_may2022_present.csv  <- Unified Standardized CSV Matrix (9,117 Rows)
-├── convert_text_to_csv.py                                                 <- Batch Data Extraction, Schema Alignment & Merge Script
-├── clean_data.py                                                          <- Structural Filtering, Text Normalization & Preprocessing
-├── engineer_labels.py                                                     <- Dual-Axis Risk Target Label Generation
-├── eda.py                                                                 <- Distribution Inspection, Statistical Audits & Dashboard
-├── baseline_model.py                                                      <- Base Line: TF-IDF & Oversampled Random Forest ML
-├── transformer_model.py                                                   <- Multi-Task DistilBERT Neural Network
-├── evaluate_comparison.py                                                 <- Automated Comparative Benchmarking & Statistical Z-Test
-└── README.md                                                              <- Repository Documentation Landing Page
+├── convert_text_to_csv.py                                   <- Batch Data Extraction, Schema Alignment & Merge Script
+├── clean_data.py                                            <- Structural Filtering, Text Normalization & Preprocessing
+├── engineer_labels.py                                       <- Dual-Axis Risk Target Label Engineering (Impact & Likelihood)
+├── eda.py                                                   <- Distribution Inspection, Statistical Audits & Dashboard
+├── plots/                                                   <- Saved EDA Visualizations & Charts
+│   ├── class_distributions.png                              <- Impact & Likelihood Label Distribution Bar Charts
+│   └── risk_matrix_heatmap.png                              <- Co-occurrence Heatmap of Risk Class Combinations
+├── baseline_model.py                                        <- TF-IDF & Oversampled Random Forest Baseline ML Model
+├── transformer_model.py                                     <- Multi-Task DistilBERT / BERT Fine-Tuning Neural Network
+├── evaluate_comparison.py                                   <- Comparative Benchmarking, ASCII Table & Z-Test (RQ4)
+├── results/                                                 <- Exported Prediction Artifacts Directory
+│   ├── baseline_preds.npz                                   <- Saved Test Predictions & Labels (Random Forest)
+│   └── transformer_preds.npz                                <- Saved Test Predictions & Labels (DistilBERT)
+└── README.md                                                <- Repository Documentation Landing Page
