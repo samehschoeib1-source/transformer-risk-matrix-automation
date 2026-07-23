@@ -38,4 +38,4 @@ The objective of this research is to automate the extraction and mapping of oper
 
 ## License & Data Source
 * **License:** MIT License
-* **Data Portal:** Source records compiled from the [U.S. DOT PHMSA Incident Data Portal](https://www.phmsa.dot.gov/data-and-statistics/pipeline/distribution-transmission-gathering-lng-and-liquid-accident-and-incident-data)[cite: 1].
+* **Data Portal:** Source records compiled from the [U.S. DOT PHMSA Incident Data Portal](https://www.phmsa.dot.gov/data-and-statistics/pipeline/distribution-transmission-gathering-lng-and-liquid-accident-and-incident-data).
