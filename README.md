@@ -1,5 +1,10 @@
 # Transformer-Based Risk Matrix Automation in Oil & Gas
 
+![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)
+![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-EE4C2C.svg)
+![HuggingFace](https://img.shields.io/badge/HuggingFace-Transformers-FFD21E.svg)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
+
 ## Project Overview
 This repository contains the complete open-access replication package, datasets, and codebase for the graduate data analytics capstone project: **Transformer-Based Risk Matrix Automation in Oil & Gas**.
 
@@ -28,3 +33,9 @@ The objective of this research is to automate the extraction and mapping of oper
 │   ├── baseline_preds.npz                                   <- Saved Test Predictions & Labels (Random Forest)
 │   └── transformer_preds.npz                                <- Saved Test Predictions & Labels (DistilBERT)
 └── README.md                                                <- Repository Documentation Landing Page
+```
+---
+
+## License & Data Source
+* **License:** MIT License
+* **Data Portal:** Source records compiled from the [U.S. DOT PHMSA Incident Data Portal](https://www.phmsa.dot.gov/data-and-statistics/pipeline/distribution-transmission-gathering-lng-and-liquid-accident-and-incident-data)[cite: 1].
