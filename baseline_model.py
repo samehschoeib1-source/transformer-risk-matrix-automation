@@ -19,16 +19,12 @@ def train_baseline():
         y_impact = df['IMPACT_SEVERITY']
         y_likelihood = df['ESCALATION_LIKELIHOOD']
         
-        # Combined target composite to allow stratified splitting across both targets simultaneously
-        y_composite = df['IMPACT_SEVERITY'].astype(str) + "_" + df['ESCALATION_LIKELIHOOD'].astype(str)
-        
         # --- 1. Split Data into Train and Test Sets (80/20 split) ---
-        # Stratification guarantees balanced class distribution in both splits
+        # NO stratify parameter to prevent crashes with single-instance classes
         X_train, X_test, y_imp_train, y_imp_test, y_lik_train, y_lik_test = train_test_split(
             X, y_impact, y_likelihood, 
             test_size=0.20, 
-            random_state=42,
-            stratify=y_composite
+            random_state=42
         )
         
         print(f"Training observations: {len(X_train)} | Test observations: {len(X_test)}")
@@ -55,7 +51,6 @@ def train_baseline():
         print("\n================ BASELINE EVALUATION REPORT ================")
         print(f"Impact Severity Target Accuracy: {accuracy_score(y_imp_test, preds_impact):.4f}")
         print("\nImpact Classification Metrics:")
-        # zero_division=0 gracefully handles zero precision without throwing warnings
         print(classification_report(y_imp_test, preds_impact, zero_division=0))
         
         print("-" * 60)
