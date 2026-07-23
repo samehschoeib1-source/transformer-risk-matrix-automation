@@ -14,5 +14,6 @@ The objective of this research is to automate the extraction and mapping of oper
 ├── convert_text_to_csv.py                                                 <- Data Extraction & Format Script
 ├── clean_data.py                                                          <- Structural Filtering & Preprocessing
 ├── engineer_labels.py                                                     <- Dual-Axis Target Label Generation
-├── baseline_model.py                                                      <- Traditional TF-IDF & Random Forest ML
+├── baseline.py                                                            <- Traditional TF-IDF & Random Forest ML
+├── transformer_model.py                                                   <- Multi-Task BERT / DistilBERT Neural Network
 └── README.md                                                              <- Repository Documentation Landing Page
